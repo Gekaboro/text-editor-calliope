@@ -15,6 +15,8 @@ let RETURN_KEY = 8
 let CHAR_LENGTH = 8
 let CHAR_HEIGHT = 8
 
+pins.raiseKeyboardEvent(true)
+
 pins.onKeyboardEvent(function(zeichenCode: number, zeichenText: string, isASCII: boolean) {
     if (ARROW_KEYS.indexOf(zeichenCode) > -1) {
         change_cursor_pos(zeichenCode)
@@ -30,7 +32,7 @@ pins.onKeyboardEvent(function(zeichenCode: number, zeichenText: string, isASCII:
             cursor_y -= 1
         }
         else {
-            [text[cursor_y].slice(0, cursor_x - 1), text[cursor_y].slice(cursor_x)].join('')
+            text[cursor_y] = [text[cursor_y].slice(0, cursor_x - 1), text[cursor_y].slice(cursor_x)].join('')
             cursor_x -= 1
         }
     }
@@ -49,6 +51,7 @@ pins.onKeyboardEvent(function(zeichenCode: number, zeichenText: string, isASCII:
         }
     }
     matrix.line((cursor_x + 2) * CHAR_LENGTH - 2, cursor_y * CHAR_HEIGHT, (cursor_x + 2) * CHAR_LENGTH - 2, cursor_y * CHAR_HEIGHT + 6)
+    matrix.line(2 * CHAR_LENGTH - 2, 0, 2 * CHAR_LENGTH - 2, 128)
     matrix.displayMatrix()
 })
 
