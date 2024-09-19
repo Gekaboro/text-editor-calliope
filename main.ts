@@ -13,6 +13,7 @@ let ARROW_KEYS : Array<number> = [ARROW_UP, ARROW_RIGHT, ARROW_DOWN, ARROW_LEFT]
 let ENTER_KEY = 13
 let RETURN_KEY = 8
 let CHAR_LENGTH = 8
+let CHAR_HEIGHT = 8
 
 pins.onKeyboardEvent(function(zeichenCode: number, zeichenText: string, isASCII: boolean) {
     if (ARROW_KEYS.indexOf(zeichenCode) > -1) {
@@ -40,9 +41,14 @@ pins.onKeyboardEvent(function(zeichenCode: number, zeichenText: string, isASCII:
 
     matrix.clearMatrix()
     for (let i = 0; i < text.length; i++) {
-        matrix.writeTextCharset(i, 0, matrix.matrix_text(text[i]))
+        if (i < 9) {
+            matrix.writeTextCharset(i, 0, [["0", (i + 1).toString()].join(""), matrix.matrix_text(text[i])].join(""))
+        }
+        else {
+            matrix.writeTextCharset(i, 0, [(i + 1).toString(), matrix.matrix_text(text[i])].join(""))
+        }
     }
-    matrix.line(cursor_x * CHAR_LENGTH - 2, cursor_y * 10, cursor_x * CHAR_LENGTH - 2, cursor_y * 10 + 6)
+    matrix.line((cursor_x + 2) * CHAR_LENGTH - 2, cursor_y * CHAR_HEIGHT, (cursor_x + 2) * CHAR_LENGTH - 2, cursor_y * CHAR_HEIGHT + 6)
     matrix.displayMatrix()
 })
 
