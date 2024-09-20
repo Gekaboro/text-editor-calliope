@@ -29,9 +29,11 @@ pins.onKeyboardEvent(function(zeichenCode: number, zeichenText: string, isASCII:
         cursor_x = 0
     }
     else if (zeichenCode == RETURN_KEY) {
-        if (cursor_x == 0 && cursor_y > 0) {
-            text.removeAt(cursor_y)
-            cursor_y -= 1
+        if (cursor_x == 0) {
+            if (cursor_y > 0) {
+                text.removeAt(cursor_y)
+                cursor_y -= 1
+            }
         }
         else {
             text[cursor_y] = [text[cursor_y].slice(0, cursor_x - 1), text[cursor_y].slice(cursor_x)].join('')
@@ -82,6 +84,23 @@ function change_camera_pos() {
     }
     if (cursor_y > (camera_y + LINES_ON_SCREEN - 1)) {
         camera_y = cursor_y - LINES_ON_SCREEN + 1
+    }
+}
+
+function run(program_lines : Array<string>) {
+    let program : Array<string> = []
+    let token_counter : number = 0
+    let label_tracker_names : Array<string> = []
+    let label_tracker_data: Array<string> = []
+
+    for (let line = 0; line < program_lines.length; line++) {
+        let parts = program_lines[line].split(" ")
+        let opcode = parts[0]
+
+        //check if opcode is emtpy
+        if (opcode == "") {
+            continue
+        }
     }
 }
 
