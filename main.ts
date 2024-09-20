@@ -155,6 +155,11 @@ function run(program_lines : Array<string>) {
             program.push(label)
             token_counter++
         }
+        else if (opcode == "jump.sm.0") {
+            let label = parts[1]
+            program.push(label)
+            token_counter++
+        }
         else if (opcode == "jump") {
             let label = parts[1]
             program.push(label)
@@ -191,10 +196,20 @@ function run(program_lines : Array<string>) {
             let b = +stack.pop()
             stack.push((a + b).toString())
         }
-        else if (opcode == "add") {
+        else if (opcode == "sub") {
             let a = +stack.pop()
             let b = +stack.pop()
             stack.push((b - a).toString())
+        }
+        else if (opcode == "mul") {
+            let a = +stack.pop()
+            let b = +stack.pop()
+            stack.push((b * a).toString())
+        }
+        else if (opcode == "div") {
+            let a = +stack.pop()
+            let b = +stack.pop()
+            stack.push((b / a).toString())
         }
         else if (opcode == "print") {
             let string_literal = program[pc]
@@ -221,6 +236,15 @@ function run(program_lines : Array<string>) {
         else if (opcode == "jump.gt.0") {
             let num = stack.top()
             if (+num > 0) {
+                pc = label_tracker_data[label_tracker_names.indexOf(program[pc])]
+            }
+            else {
+                pc++
+            }
+        }
+        else if (opcode == "jump.sm.0") {
+            let num = stack.top()
+            if (+num < 0) {
                 pc = label_tracker_data[label_tracker_names.indexOf(program[pc])]
             }
             else {
