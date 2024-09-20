@@ -1,6 +1,6 @@
 matrix.init(matrix.ePages.y128)
 
-let text : Array<string> = [""]
+let text : Array<string> = ["push 5", "print abc", "add"]
 let cursor_x = 0
 let cursor_y = 0
 let camera_y = 0
@@ -17,7 +17,13 @@ let CHAR_LENGTH = 8
 let CHAR_HEIGHT = 8
 let LINES_ON_SCREEN = 16
 
+run(text)
+
 pins.raiseKeyboardEvent(true)
+
+input.onButtonEvent(Button.A, input.buttonEventClick(), function() {
+    run(text)
+})
 
 pins.onKeyboardEvent(function(zeichenCode: number, zeichenText: string, isASCII: boolean) {
     if (ARROW_KEYS.indexOf(zeichenCode) > -1) {
@@ -91,7 +97,7 @@ function run(program_lines : Array<string>) {
     let program : Array<string> = []
     let token_counter : number = 0
     let label_tracker_names : Array<string> = []
-    let label_tracker_data: Array<string> = []
+    let label_tracker_data: Array<number> = []
 
     for (let line = 0; line < program_lines.length; line++) {
         let parts = program_lines[line].split(" ")
@@ -101,7 +107,44 @@ function run(program_lines : Array<string>) {
         if (opcode == "") {
             continue
         }
+
+        //check if its a label
+        if (opcode.indexOf(":") == opcode.length - 1) {
+            label_tracker_names.push(opcode.split(":")[0])
+            label_tracker_data.push(token_counter)
+            continue
+        }
+
+        //store opcode token
+        program.push(opcode)
+        token_counter++
+
+        //handle opcodes
+        if (opcode == "push") {
+            let num = parts[1]
+            program.push(num)
+            token_counter++
+        }
+        else if (opcode == "print") {
+            let string_parts : Array<string> = []
+            for (let i = 1; i < parts.length - 1; i++) { string_parts.push(parts[i]) }
+            let string_literal = string_parts.join(" ")
+            program.push(string_literal)
+            token_counter++
+        }
+        else if (opcode == "jump.eq.0") {
+            let label = parts[1]
+            program.push(label)
+            token_counter++
+        }
+        else if (opcode == "jump.gt.0") {
+            let label = parts[1]
+            program.push(label)
+            token_counter++
+        }
     }
+
+    console.log(program.join(" "))
 }
 
 loops.everyInterval(200, function() {
