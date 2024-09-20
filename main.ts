@@ -173,7 +173,7 @@ function run(program_lines : Array<string>) {
     matrix.clearMatrix()
     matrix.displayMatrix()
 
-    while (program[pc] != "halt") {
+    while (program[pc] != "halt" || input.buttonIsPressed(Button.B)) {
         let opcode = program[pc]
         pc++
 
