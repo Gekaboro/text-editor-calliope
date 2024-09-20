@@ -29,7 +29,7 @@ pins.onKeyboardEvent(function(zeichenCode: number, zeichenText: string, isASCII:
         cursor_x = 0
     }
     else if (zeichenCode == RETURN_KEY) {
-        if (cursor_x == 0) {
+        if (cursor_x == 0 && cursor_y > 0) {
             text.removeAt(cursor_y)
             cursor_y -= 1
         }
@@ -46,7 +46,7 @@ pins.onKeyboardEvent(function(zeichenCode: number, zeichenText: string, isASCII:
     change_camera_pos()
 
     matrix.clearMatrix()
-    for (let i = camera_y; i < camera_y + LINES_ON_SCREEN; i++) {
+    for (let i = camera_y; i < Math.clamp(0, text.length, camera_y + LINES_ON_SCREEN); i++) {
         let j = i - camera_y
         if (i < 9) {
             matrix.writeTextCharset(j, 0, [["0", (i + 1).toString()].join(""), matrix.matrix_text(text[i])].join(""))
