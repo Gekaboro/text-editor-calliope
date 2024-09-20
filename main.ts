@@ -85,10 +85,11 @@ pins.onKeyboardEvent(function(zeichenCode: number, zeichenText: string, isASCII:
 function change_cursor_pos(code : number) {
     if (code == ARROW_UP && cursor_y > 0) {
         cursor_y -= 1
-        //cursor_x = Math.clamp(0, text[cursor_y].length - 1)
+        cursor_x = Math.clamp(0, text[cursor_y].length, cursor_x)
     }
     else if (code == ARROW_DOWN && cursor_y < (text.length - 1)) {
         cursor_y += 1
+        cursor_x = Math.clamp(0, text[cursor_y].length, cursor_x)
     }
     else if (code == ARROW_LEFT && cursor_x > 0) {
         cursor_x -= 1
