@@ -1,9 +1,13 @@
 matrix.init(matrix.ePages.y128)
 
-let text : Array<string> = ["push 5", "print abc", "add"]
+let text : Array<string> = [""]
 let cursor_x = 0
 let cursor_y = 0
 let camera_y = 0
+
+let mode = 0 // 0 = code, 1 = run
+let continue_run = true
+let output: Array<string> = []
 
 //codes
 let ARROW_UP = 181
@@ -17,56 +21,66 @@ let CHAR_LENGTH = 8
 let CHAR_HEIGHT = 8
 let LINES_ON_SCREEN = 16
 
-run(text)
-
-pins.raiseKeyboardEvent(true)
+matrix.clearMatrix()
+matrix.displayMatrix()
 
 input.onButtonEvent(Button.A, input.buttonEventClick(), function() {
     run(text)
 })
 
 pins.onKeyboardEvent(function(zeichenCode: number, zeichenText: string, isASCII: boolean) {
-    if (ARROW_KEYS.indexOf(zeichenCode) > -1) {
-        change_cursor_pos(zeichenCode)
-    }
-    else if (zeichenCode == ENTER_KEY) {
-        text.insertAt(cursor_y + 1, "")
-        cursor_y++
-        cursor_x = 0
-    }
-    else if (zeichenCode == RETURN_KEY) {
-        if (cursor_x == 0) {
-            if (cursor_y > 0) {
-                text.removeAt(cursor_y)
-                cursor_y -= 1
+    if (mode == 0) {
+        if (ARROW_KEYS.indexOf(zeichenCode) > -1) {
+            change_cursor_pos(zeichenCode)
+        }
+        else if (zeichenCode == ENTER_KEY) {
+            text.insertAt(cursor_y + 1, "")
+            cursor_y++
+            cursor_x = 0
+        }
+        else if (zeichenCode == RETURN_KEY) {
+            if (cursor_x == 0) {
+                if (cursor_y > 0) {
+                    text.removeAt(cursor_y)
+                    cursor_y -= 1
+                }
+            }
+            else {
+                text[cursor_y] = [text[cursor_y].slice(0, cursor_x - 1), text[cursor_y].slice(cursor_x)].join('')
+                cursor_x -= 1
             }
         }
         else {
-            text[cursor_y] = [text[cursor_y].slice(0, cursor_x - 1), text[cursor_y].slice(cursor_x)].join('')
-            cursor_x -= 1
+            text[cursor_y] = [text[cursor_y].slice(0, cursor_x), zeichenText, text[cursor_y].slice(cursor_x)].join('')
+            cursor_x++
         }
-    }
-    else {
-        text[cursor_y] = [text[cursor_y].slice(0, cursor_x), zeichenText, text[cursor_y].slice(cursor_x)].join('')
-        cursor_x++
+
+        change_camera_pos()
+
+        matrix.clearMatrix()
+        for (let i = camera_y; i < Math.clamp(0, text.length, camera_y + LINES_ON_SCREEN); i++) {
+            let j = i - camera_y
+            if (i < 9) {
+                matrix.writeTextCharset(j, 0, [["0", (i + 1).toString()].join(""), matrix.matrix_text(text[i])].join(""))
+            }
+            else {
+                matrix.writeTextCharset(j, 0, [(i + 1).toString(), matrix.matrix_text(text[i])].join(""))
+            }
+        }
+        let local_cursor_y = cursor_y - camera_y
+        matrix.line((cursor_x + 2) * CHAR_LENGTH - 1, local_cursor_y * CHAR_HEIGHT, (cursor_x + 2) * CHAR_LENGTH - 1, local_cursor_y * CHAR_HEIGHT + 6)
+        matrix.line(2 * CHAR_LENGTH - 2, 0, 2 * CHAR_LENGTH - 2, 128)
+        matrix.displayMatrix()
     }
 
-    change_camera_pos()
-
-    matrix.clearMatrix()
-    for (let i = camera_y; i < Math.clamp(0, text.length, camera_y + LINES_ON_SCREEN); i++) {
-        let j = i - camera_y
-        if (i < 9) {
-            matrix.writeTextCharset(j, 0, [["0", (i + 1).toString()].join(""), matrix.matrix_text(text[i])].join(""))
-        }
+    else if (mode == 1) {
+        if (zeichenCode == ENTER_KEY) { continue_run = true }
         else {
-            matrix.writeTextCharset(j, 0, [(i + 1).toString(), matrix.matrix_text(text[i])].join(""))
+            output[output.length - 1] = output[output.length - 1].concat(zeichenText)
         }
+
+        render_output(output)
     }
-    let local_cursor_y = cursor_y - camera_y
-    matrix.line((cursor_x + 2) * CHAR_LENGTH - 1, local_cursor_y * CHAR_HEIGHT, (cursor_x + 2) * CHAR_LENGTH - 1, local_cursor_y * CHAR_HEIGHT + 6)
-    matrix.line(2 * CHAR_LENGTH - 2, 0, 2 * CHAR_LENGTH - 2, 128)
-    matrix.displayMatrix()
 })
 
 function change_cursor_pos(code : number) {
@@ -127,7 +141,7 @@ function run(program_lines : Array<string>) {
         }
         else if (opcode == "print") {
             let string_parts : Array<string> = []
-            for (let i = 1; i < parts.length - 1; i++) { string_parts.push(parts[i]) }
+            for (let i = 1; i < parts.length; i++) { string_parts.push(parts[i]) }
             let string_literal = string_parts.join(" ")
             program.push(string_literal)
             token_counter++
@@ -144,8 +158,116 @@ function run(program_lines : Array<string>) {
         }
     }
 
-    console.log(program.join(" "))
+    console.log(program)
+
+    //execute program
+    mode = 1
+
+    let pc = 0
+    let stack = new Stack(256)
+
+    matrix.clearMatrix()
+    matrix.displayMatrix()
+
+    while (program[pc] != "halt") {
+        let opcode = program[pc]
+        pc++
+
+        if (opcode == "push") {
+            let num = +program[pc]
+            pc++
+
+            stack.push(num)
+        }
+        else if (opcode == "pop") {
+            stack.pop()
+        }
+        else if (opcode == "add") {
+            let a = +stack.pop()
+            let b = +stack.pop()
+            stack.push(a + b)
+        }
+        else if (opcode == "add") {
+            let a = +stack.pop()
+            let b = +stack.pop()
+            stack.push(b - a)
+        }
+        else if (opcode == "print") {
+            let string_literal = program[pc]
+            pc++
+            output.push(string_literal)
+            render_output(output)
+        }
+        else if (opcode == "read") {
+            continue_run = false
+            while (!continue_run) {
+                pins.raiseKeyboardEvent(true)
+            }
+            stack.push(+output[output.length - 1])
+        }
+        else if (opcode == "jump.eq.0") {
+            let num = stack.top()
+            if (num == 0) {
+                pc = label_tracker_data[label_tracker_names.indexOf(program[pc])]
+            }
+            else {
+                pc++
+            }
+        }
+        else if (opcode == "jump.gt.0") {
+            let num = stack.top()
+            if (num > 0) {
+                pc = label_tracker_data[label_tracker_names.indexOf(program[pc])]
+            }
+            else {
+                pc++
+            }
+        }
+        else if (opcode == "printtop") {
+            output.push(stack.top().toString())
+            render_output(output)
+        }
+    }
+
+    console.log("Finished!")
+    basic.pause(1000)
+    mode = 0
 }
+
+function render_output(out : Array<string>) {
+    matrix.clearMatrix()
+    for (let i = 0; i < output.length; i++) {
+        matrix.writeTextCharset(i, 0, matrix.matrix_text(out[i]))
+    }
+    matrix.displayMatrix()
+}
+
+class Stack {
+    private buf : Array<number>;
+    private sp : number;
+
+    constructor(size : number) {
+        this.buf = [];
+        for (let i = 0; i < size; i++) { this.buf.push(0) }
+        this.sp = -1;
+    }
+
+    push (num : number) {
+        this.sp++;
+        this.buf[this.sp] = num;
+    }
+
+    pop () {
+        let num = this.buf[this.sp]
+        this.sp--
+        return num
+    }
+
+    top () {
+        return this.buf[this.sp]
+    }
+}
+
 
 loops.everyInterval(200, function() {
     pins.raiseKeyboardEvent(true)
