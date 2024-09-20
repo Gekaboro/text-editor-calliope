@@ -173,7 +173,7 @@ function run(program_lines : Array<string>) {
     matrix.clearMatrix()
     matrix.displayMatrix()
 
-    while (program[pc] != "halt" || input.buttonIsPressed(Button.B)) {
+    while (program[pc] != "halt" && !input.buttonIsPressed(Button.B)) {
         let opcode = program[pc]
         pc++
 
@@ -280,6 +280,6 @@ class Stack {
 }
 
 
-loops.everyInterval(200, function() {
+loops.everyInterval(50, function() {
     pins.raiseKeyboardEvent(true)
 })
