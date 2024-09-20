@@ -7,7 +7,7 @@ let camera_y = 0
 
 let mode = 0 // 0 = code, 1 = run
 let continue_run = true
-let output: Array<string> = []
+let output: Array<string> = [""]
 
 //codes
 let ARROW_UP = 181
@@ -73,13 +73,12 @@ pins.onKeyboardEvent(function(zeichenCode: number, zeichenText: string, isASCII:
         matrix.displayMatrix()
     }
 
-    else if (mode == 1) {
+    else if (mode == 1 && !continue_run) {
         if (zeichenCode == ENTER_KEY) { continue_run = true }
         else {
-            output[output.length - 1] = output[output.length - 1].concat(zeichenText)
+            output[Math.clamp(0, output.length, output.length - 1)] = output[output.length - 1].concat(zeichenText)
+            render_output()
         }
-
-        render_output(output)
     }
 })
 
@@ -156,6 +155,11 @@ function run(program_lines : Array<string>) {
             program.push(label)
             token_counter++
         }
+        else if (opcode == "jump") {
+            let label = parts[1]
+            program.push(label)
+            token_counter++
+        }
     }
 
     console.log(program)
@@ -174,7 +178,7 @@ function run(program_lines : Array<string>) {
         pc++
 
         if (opcode == "push") {
-            let num = +program[pc]
+            let num = program[pc]
             pc++
 
             stack.push(num)
@@ -185,29 +189,29 @@ function run(program_lines : Array<string>) {
         else if (opcode == "add") {
             let a = +stack.pop()
             let b = +stack.pop()
-            stack.push(a + b)
+            stack.push((a + b).toString())
         }
         else if (opcode == "add") {
             let a = +stack.pop()
             let b = +stack.pop()
-            stack.push(b - a)
+            stack.push((b - a).toString())
         }
         else if (opcode == "print") {
             let string_literal = program[pc]
             pc++
             output.push(string_literal)
-            render_output(output)
+            render_output()
         }
         else if (opcode == "read") {
             continue_run = false
             while (!continue_run) {
                 pins.raiseKeyboardEvent(true)
             }
-            stack.push(+output[output.length - 1])
+            stack.push(output[output.length - 1])
         }
         else if (opcode == "jump.eq.0") {
             let num = stack.top()
-            if (num == 0) {
+            if (num == "0") {
                 pc = label_tracker_data[label_tracker_names.indexOf(program[pc])]
             }
             else {
@@ -216,16 +220,19 @@ function run(program_lines : Array<string>) {
         }
         else if (opcode == "jump.gt.0") {
             let num = stack.top()
-            if (num > 0) {
+            if (+num > 0) {
                 pc = label_tracker_data[label_tracker_names.indexOf(program[pc])]
             }
             else {
                 pc++
             }
         }
+        else if (opcode == "jump") {
+            pc = label_tracker_data[label_tracker_names.indexOf(program[pc])]
+        }
         else if (opcode == "printtop") {
-            output.push(stack.top().toString())
-            render_output(output)
+            output.push(stack.top())
+            render_output()
         }
     }
 
@@ -234,25 +241,29 @@ function run(program_lines : Array<string>) {
     mode = 0
 }
 
-function render_output(out : Array<string>) {
+function render_output() {
+    while (output.length > 16) {
+        output.shift()
+    }
+
     matrix.clearMatrix()
     for (let i = 0; i < output.length; i++) {
-        matrix.writeTextCharset(i, 0, matrix.matrix_text(out[i]))
+        matrix.writeTextCharset(i, 0, matrix.matrix_text(output[i]))
     }
     matrix.displayMatrix()
 }
 
 class Stack {
-    private buf : Array<number>;
+    private buf : Array<string>;
     private sp : number;
 
     constructor(size : number) {
         this.buf = [];
-        for (let i = 0; i < size; i++) { this.buf.push(0) }
+        for (let i = 0; i < size; i++) { this.buf.push("0") }
         this.sp = -1;
     }
 
-    push (num : number) {
+    push (num : string) {
         this.sp++;
         this.buf[this.sp] = num;
     }
