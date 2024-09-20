@@ -150,5 +150,3 @@ function run(program_lines : Array<string>) {
 loops.everyInterval(200, function() {
     pins.raiseKeyboardEvent(true)
 })
-
-//!!!!!!!!ABSPEICHERN!!!!!!!!!!
