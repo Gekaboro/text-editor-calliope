@@ -43,6 +43,7 @@ pins.onKeyboardEvent(function(zeichenCode: number, zeichenText: string, isASCII:
                 if (cursor_y > 0) {
                     text.removeAt(cursor_y)
                     cursor_y -= 1
+                    cursor_x = text[cursor_y].length
                 }
             }
             else {
@@ -265,6 +266,7 @@ function run(program_lines : Array<string>) {
     console.log("Finished!")
     basic.pause(1000)
     mode = 0
+    output = [""]
 }
 
 function render_output() {
