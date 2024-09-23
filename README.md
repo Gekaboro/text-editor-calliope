@@ -1,5 +1,5 @@
 
-> Diese Seite bei [https://gekaboro.github.io/code-editor/](https://gekaboro.github.io/code-editor/) öffnen
+> Diese Seite bei [https://theskizzle26.github.io/code-editor/](https://theskizzle26.github.io/code-editor/) öffnen
 
 ## Als Erweiterung verwenden
 
