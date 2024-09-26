@@ -9,6 +9,26 @@ let mode = 0 // 0 = code, 1 = run
 let continue_run = true
 let output: Array<string> = [""]
 
+let startup_text = `
+read
+jump lp
+
+lp:
+jump.eq.0 even
+jump.sm.0 odd
+push 2
+sub
+jump lp
+
+even:
+print even!
+halt
+
+odd:
+print odd!
+halt
+`
+
 //codes
 let ARROW_UP = 181
 let ARROW_DOWN = 182
@@ -21,13 +41,14 @@ let CHAR_LENGTH = 8
 let CHAR_HEIGHT = 8
 let LINES_ON_SCREEN = 16
 
-//read_program()
+read_program(startup_text)
 
 matrix.clearMatrix()
 matrix.displayMatrix()
 
-function read_program(path: string) {
-    
+function read_program(text_to_read: string) {
+    text = text_to_read.split("\n")
+    text.shift()
 }
 
 input.onButtonEvent(Button.A, input.buttonEventClick(), function() {
