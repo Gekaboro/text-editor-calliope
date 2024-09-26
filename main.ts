@@ -21,8 +21,14 @@ let CHAR_LENGTH = 8
 let CHAR_HEIGHT = 8
 let LINES_ON_SCREEN = 16
 
+//read_program()
+
 matrix.clearMatrix()
 matrix.displayMatrix()
+
+function read_program(path: string) {
+    
+}
 
 input.onButtonEvent(Button.A, input.buttonEventClick(), function() {
     run(text)
